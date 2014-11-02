@@ -53,8 +53,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>
-    </ApplicationIcon>
+    <ApplicationIcon>wooden_sign512_256px.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>PortableDnsProxy.Program</StartupObject>
@@ -216,6 +215,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\blackboard_sum.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="wooden_sign512_256px.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
