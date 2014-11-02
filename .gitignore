@@ -41,6 +41,16 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
 PortableDnsProxy/obj
 PortableDnsProxy/publish
 PortableDnsProxy/bin/Debug
+
+*.application
+*.exe.config
+*.exe.manifest
+*.pdb
+*.vshost.application
+*.vshost.exe
+*.vshost.exe.config
+*.vshost.exe.manifest
