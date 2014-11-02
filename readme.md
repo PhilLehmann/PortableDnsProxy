@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿# PortableDnsProxy - A Portable HTTP Proxy and DNS Redirector
 
 When in need for a software which could redirect HTTP requests meant for one server to another server during 
@@ -10,6 +11,17 @@ Et voila. Maybe someone finds this helpful. If not, we can classify it as throw 
 
 PortableDnsProxy supports chunked HTTP requests as well as TLS. For connecting via TLS, self signed intermediate certificates are being created and cached on the fly. 
 So when connecting to an HTTPS server, you will probably need to accept the "unsafe certificate" within your browser on the first visit.
+=======
+# PortableDnsProxy - A Portable HTTP Proxy and DNS Redirector
+
+I developed this when in need for a software which could redirect HTTP requests technically meant for one server to another server during a infrastucture switch (comparable of using your production domain with your test environment).
+
+The DNS servers could not be changed in my corporate environment, so the only option left was to use an HTTP proxy which would do the redirection. 
+
+Et voila. Maybe someone finds this helpful. So basically, this is throw away software. Please take that into account when judging the code ;-)
+
+PortableDnsProxy supports chunked HTTP requests as well as TLS. For connecting via TLS, self signed intermediate certificates are being created and cached on the fly. So when connecting to an HTTPS target, you will need to accept the "unsafe certificate", as you problaby know what you are doing, right? ;-)
+>>>>>>> origin/master
 
 You can clear the TLS certificate cache within the configuration screen, but then all nasty certificate warnings will reappear.
 
@@ -77,4 +89,8 @@ Install one of the above.
          
       2. If you are not allowed to use this software freely
          due to the aforementioned restrictions, you may try
+<<<<<<< HEAD
          to contact the author for special licences.
+=======
+         to contact the author for special licences.
+>>>>>>> origin/master
