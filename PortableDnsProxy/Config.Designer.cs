@@ -135,9 +135,9 @@
             this.lblPort.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblPort.Location = new System.Drawing.Point(10, 78);
             this.lblPort.Name = "lblPort";
-            this.lblPort.Size = new System.Drawing.Size(167, 13);
+            this.lblPort.Size = new System.Drawing.Size(186, 13);
             this.lblPort.TabIndex = 5;
-            this.lblPort.Text = "Portof Portable DNS own proxy";
+            this.lblPort.Text = "Port of Portable DNS Proxy\'s proxy";
             // 
             // tbxPort
             // 
