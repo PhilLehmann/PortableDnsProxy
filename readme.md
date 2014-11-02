@@ -1,4 +1,5 @@
-# PortableDnsProxy - A Portable HTTP Proxy and DNS Redirector
+# PortableDnsProxy
+### A Portable HTTP Proxy and DNS Redirector
 
 When in need for a software which could redirect HTTP requests meant for one server to another server during 
 a infrastucture switch (comparable of using your production domain with your test environment), 
