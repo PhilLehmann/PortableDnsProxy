@@ -60,22 +60,29 @@ namespace PortableDnsProxy
                         !httpRequestHeaders.Hostname.Equals(lastHttpRequestHeaders.Hostname) ||
                         httpRequestHeaders.Port != lastHttpRequestHeaders.Port)
                     {
-                        string serverAddress = httpRequestHeaders.Hostname;
-
                         // Replace hostname with configured values if matching
                         statsRedirected = false;
                         foreach (Utils.DbHost host in Server.Settings.Hosts)
                         {
-                            if (serverAddress.ToLower().Equals(host.OriginalName.ToLower()))
+                            if (httpRequestHeaders.Hostname.ToLower().Equals(host.OriginalName.ToLower()))
                             {
-                                serverAddress = host.TargetNameOrIp;
+                                if (host.RedirectedNameOrIp != null)
+                                {
+                                    httpRequestHeaders.Hostname = host.RedirectedNameOrIp;
+                                }
+
+                                if (host.RewrittenHostHeader != null)
+                                {
+                                    Utils.RewriteHostnameInHeaders(httpRequestHeaders, host.OriginalName, host.RewrittenHostHeader);
+                                }
+
                                 statsRedirected = true;
                                 break;
                             }
                         }
 
                         // Proxy the request to the target host
-                        serverConnection = Utils.GetSettingsConformantServerTcpClient(Server, serverAddress, httpRequestHeaders.Port);
+                        serverConnection = Utils.GetSettingsConformantServerTcpClient(Server, httpRequestHeaders.Hostname, httpRequestHeaders.Port);
                         serverStream = serverConnection.GetStream();
 
                         lastHttpRequestHeaders = httpRequestHeaders;

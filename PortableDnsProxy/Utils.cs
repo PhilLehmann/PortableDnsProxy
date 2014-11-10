@@ -43,14 +43,16 @@ namespace PortableDnsProxy
 
         public class DbHost
         {
-            public DbHost(string name, string ip)
+            public DbHost(string originalName, string redirectedNameOrIp, string rewrittenHostHeader)
             {
-                this.OriginalName = name;
-                this.TargetNameOrIp = ip;
+                this.OriginalName = originalName;
+                this.RedirectedNameOrIp = redirectedNameOrIp;
+                this.RewrittenHostHeader = rewrittenHostHeader;
             }
 
             public string OriginalName { get; internal set; }
-            public string TargetNameOrIp { get; internal set; }
+            public string RedirectedNameOrIp { get; internal set; }
+            public string RewrittenHostHeader { get; internal set; }
         }
         
         public static DbSettings ReadSettings()
@@ -62,53 +64,82 @@ namespace PortableDnsProxy
                 return null;
             }
 
-            RegistryKey hostsKey = settingKey.OpenSubKey("Hosts");
-
-            if (hostsKey == null)
-            {
-                return null;
-            }
-
             DbSettings settings = new DbSettings();
 
             List<string> valueNames = new List<string>(settingKey.GetValueNames());
 
-            string proxyType = (string)settingKey.GetValue("proxy_type");
+            object proxyType = settingKey.GetValue("proxy_type");
+            object proxyHost = settingKey.GetValue("proxy_host");
+            object proxyPort = settingKey.GetValue("proxy_port");
 
-            if(proxyType != null)
+            if (proxyType != null && proxyHost != null && proxyPort != null)
             {
-                string proxyHost = settingKey.GetValue("proxy_host").ToString();
-                string proxyPortString = settingKey.GetValue("proxy_port").ToString();
+                string proxyHostString = proxyHost.ToString();
+                string proxyPortString = proxyPort.ToString();
 
-                if(proxyHost != null && proxyPortString != null && !proxyHost.Equals("") && !proxyPortString.Equals(""))
+                if(!proxyHost.Equals("") && !proxyPortString.Equals(""))
                 {
-                    int proxyPort;
-                    if (!int.TryParse(proxyPortString, out proxyPort) || proxyPort < 1 || proxyPort > 65535)
+                    int proxyPortInt;
+                    if (!int.TryParse(proxyPortString, out proxyPortInt) || proxyPortInt < 1 || proxyPortInt > 65535)
                     {
-                        Utils.ShowError("Please enter a valid port number [1 - 65535] for your HTTP proxy into the HTTP proxy textbox of the configuration screen and save that configuration.");
                         return null;
                     }
 
-                    settings.ProxyHost = proxyHost;
-                    settings.ProxyPort = proxyPort;
-                    settings.ProxyType = (Starksoft.Net.Proxy.ProxyType) Enum.Parse(typeof(Starksoft.Net.Proxy.ProxyType), proxyType, true);
+                    Starksoft.Net.Proxy.ProxyType proxyTypeEnum;
+
+                    if (!Enum.TryParse<Starksoft.Net.Proxy.ProxyType>(proxyType.ToString(), true, out proxyTypeEnum))
+                    {
+                        return null;
+                    }
+
+                    settings.ProxyType = proxyTypeEnum;
+                    settings.ProxyHost = proxyHostString;
+                    settings.ProxyPort = proxyPortInt;
                 }
             }
 
             int port;
             if (!int.TryParse(settingKey.GetValue("port").ToString(), out port) || port < 1 || port > 65535)
             {
-                Utils.ShowError("Please enter a valid port number [1 - 65535] into the port textbox of the configuration screen and save that configuration.");
                 return null;
             }
 
             settings.Port = port;
 
             settings.Hosts = new List<DbHost>();
+            RegistryKey hostsKey = settingKey.OpenSubKey("Hosts");
 
-            foreach (string name in hostsKey.GetValueNames())
+            if (hostsKey == null)
             {
-                settings.Hosts.Add(new DbHost(name, hostsKey.GetValue(name).ToString()));
+                return settings;
+            }
+
+            foreach (string name in hostsKey.GetSubKeyNames())
+            {
+                RegistryKey hostKey = hostsKey.OpenSubKey(name);
+
+                if (hostKey == null)
+                {
+                    continue;
+                }
+
+                string hostRedirectString = null;
+                string hostHeaderOverwriteString = null;
+
+                object hostRedirect = hostKey.GetValue("host_redirect");
+                object hostHeaderOverwrite = hostKey.GetValue("host_header_overwrite");
+
+                if (hostRedirect != null && !hostRedirect.ToString().Trim().Equals(""))
+                {
+                    hostRedirectString = hostRedirect.ToString();
+                }
+
+                if (hostHeaderOverwrite != null && !hostHeaderOverwrite.ToString().Trim().Equals(""))
+                {
+                    hostHeaderOverwriteString = hostHeaderOverwrite.ToString();
+                }
+
+                settings.Hosts.Add(new DbHost(name, hostRedirectString, hostHeaderOverwriteString));
             }
 
             return settings;
@@ -251,6 +282,8 @@ namespace PortableDnsProxy
             }
 
             int line = 0;
+            string hostnameWithPort = null;
+            bool firstLineContainsDomainName = false;
             while (true)
             {
                 string httpHeader = Utils.ReadLineFromStream(clientStream);
@@ -264,6 +297,11 @@ namespace PortableDnsProxy
                     {
                         Debug.WriteLine(connectionId + " first client header line:" + httpHeader);
                     }
+
+                    if (firstLineTokens[1].StartsWith("http://") || firstLineTokens[1].StartsWith("https://"))
+                    {
+                        firstLineContainsDomainName = true;
+                    }
                 }
                 else
                 {
@@ -271,6 +309,7 @@ namespace PortableDnsProxy
                     if (normalizedHttpHeader.StartsWith("host"))
                     {
                         response.Hostname = httpHeader.Substring(httpHeader.IndexOf(':') + 1).Trim();
+                        hostnameWithPort = response.Hostname;
 
                         if (response.Hostname.Contains(":"))
                         {
@@ -296,8 +335,65 @@ namespace PortableDnsProxy
                 }
             }
 
-            response.Headers = httpRequestHeaders.ToString();
+            // Clear hostname in first line, as that leads to problems in case of redirects
+            if (firstLineContainsDomainName && hostnameWithPort != null)
+            {
+                string[] httpRequestHeaderLines = httpRequestHeaders.ToString().Split('\n');
+                
+                if(httpRequestHeaderLines[0].Contains(response.Hostname))
+                {
+                    string[] firstLineTokens = httpRequestHeaderLines[0].Split(' ');
+
+                    int hostnamePosition = firstLineTokens[1].IndexOf(hostnameWithPort);
+
+                    if(hostnamePosition != -1)
+                    {
+                        firstLineTokens[1] = firstLineTokens[1].Substring(hostnamePosition + hostnameWithPort.Length).Trim();
+
+                        if (firstLineTokens[1].Equals(""))
+                        {
+                            firstLineTokens[1] = "/";
+                        }
+
+                        httpRequestHeaderLines[0] = String.Join(" ", firstLineTokens);
+
+                        response.Headers = String.Join("\n", httpRequestHeaderLines);
+                    }
+                }
+            }
+
+            if(response.Headers == null)
+            {
+                response.Headers = httpRequestHeaders.ToString();
+            }
+            
             return response;
+        }
+
+        public static void RewriteHostnameInHeaders(HttpRequestHeaders headers, string currentHostname, string newHostname)
+        {
+            string[] headerLines = headers.Headers.Split('\n');
+
+            for(int line = 0; line < headerLines.Length; ++line)
+            {
+                if(line == 0)
+                {
+                    string[] tokens = headerLines[line].Split(' ');
+
+                    if (tokens[1].Contains(currentHostname))
+                    {
+                        tokens[1] = tokens[1].Replace(currentHostname, newHostname);
+                    }
+
+                    headerLines[line] = String.Join(" ", tokens);
+                }
+                else if(headerLines[line].StartsWith("Host:"))
+                {
+                    headerLines[line] = "Host: " + newHostname + "\r";
+                }
+            }
+
+            headers.Headers = String.Join("\n", headerLines);
         }
 
         public class HttpResponseHeaders

@@ -383,7 +383,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "Working";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Portable DNS Proxy - Proxy running";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Working_FormClosing);
             this.Load += new System.EventHandler(this.Working_Load);

@@ -30,8 +30,9 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Config));
             this.dgvHosts = new System.Windows.Forms.DataGridView();
-            this.colHost = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colIp = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colHostname = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colHostnameRedirected = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colHostnameRewritten = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.btnRemoveHost = new System.Windows.Forms.Button();
             this.btnSaveAndClose = new System.Windows.Forms.Button();
             this.btnAddHost = new System.Windows.Forms.Button();
@@ -55,27 +56,38 @@
             this.dgvHosts.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.EnableWithoutHeaderText;
             this.dgvHosts.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvHosts.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colHost,
-            this.colIp});
+            this.colHostname,
+            this.colHostnameRedirected,
+            this.colHostnameRewritten});
             this.dgvHosts.Location = new System.Drawing.Point(12, 191);
             this.dgvHosts.MultiSelect = false;
             this.dgvHosts.Name = "dgvHosts";
+            this.dgvHosts.ReadOnly = true;
             this.dgvHosts.RowHeadersVisible = false;
-            this.dgvHosts.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
+            this.dgvHosts.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvHosts.Size = new System.Drawing.Size(392, 165);
             this.dgvHosts.TabIndex = 3;
+            this.dgvHosts.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvHosts_CellDoubleClick);
             // 
-            // colHost
+            // colHostname
             // 
-            this.colHost.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.colHost.HeaderText = "Hostname";
-            this.colHost.Name = "colHost";
+            this.colHostname.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.colHostname.HeaderText = "Host to match";
+            this.colHostname.Name = "colHostname";
+            this.colHostname.ReadOnly = true;
             // 
-            // colIp
+            // colHostnameRedirected
             // 
-            this.colIp.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.colIp.HeaderText = "Rewritten Hostname / IP";
-            this.colIp.Name = "colIp";
+            this.colHostnameRedirected.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.colHostnameRedirected.HeaderText = "Redirected to...";
+            this.colHostnameRedirected.Name = "colHostnameRedirected";
+            this.colHostnameRedirected.ReadOnly = true;
+            // 
+            // colHostnameRewritten
+            // 
+            this.colHostnameRewritten.HeaderText = "Rewritten to...";
+            this.colHostnameRewritten.Name = "colHostnameRewritten";
+            this.colHostnameRewritten.ReadOnly = true;
             // 
             // btnRemoveHost
             // 
@@ -242,7 +254,7 @@
             this.MinimizeBox = false;
             this.Name = "Config";
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Portable DNS Proxy - Configuration";
             this.Load += new System.EventHandler(this.Config_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dgvHosts)).EndInit();
@@ -266,7 +278,8 @@
         private System.Windows.Forms.TextBox tbxProxyHost;
         private System.Windows.Forms.Label lblProxy;
         private System.Windows.Forms.ComboBox cbxProxyType;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colHost;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colIp;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colHostname;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colHostnameRedirected;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colHostnameRewritten;
     }
 }

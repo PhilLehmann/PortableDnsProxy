@@ -27,11 +27,6 @@ namespace PortableDnsProxy
                 tbxPort.Text = "8042";
             }
 
-            if(dgvHosts.Rows.Count == 0)
-            {
-                dgvHosts.Rows.Add("localhost", "127.0.0.1");
-            }
-
             if(Utils.CertificatesExist())
             {
                 btnClearTlsCertificateCache.Enabled = true;
@@ -54,7 +49,9 @@ namespace PortableDnsProxy
 
                 foreach(Utils.DbHost host in settings.Hosts)
                 {
-                    dgvHosts.Rows.Add(host.OriginalName, host.TargetNameOrIp);
+                    dgvHosts.Rows.Add(host.OriginalName == null ? "" : host.OriginalName, 
+                                      host.RedirectedNameOrIp == null ? "" : host.RedirectedNameOrIp, 
+                                      host.RewrittenHostHeader == null ? "" : host.RewrittenHostHeader);
                 }
             }
         }
@@ -104,14 +101,15 @@ namespace PortableDnsProxy
 
                 foreach (DataGridViewRow row in dgvHosts.Rows)
                 {
-                    if (row.Cells[0] == null || row.Cells[1] == null || 
-                        row.Cells[0].Value == null || row.Cells[1].Value == null ||
-                        row.Cells[0].Value.ToString().Equals("") || row.Cells[1].Value.ToString().Equals(""))
+                    if (row.Cells[0].Value.ToString().Equals(""))
                     {
                         continue;
                     }
 
-                    hostsKey.SetValue(row.Cells[0].Value.ToString(), row.Cells[1].Value.ToString());
+                    RegistryKey hostKey = hostsKey.CreateSubKey(row.Cells[0].Value.ToString());
+
+                    hostKey.SetValue("host_redirect", row.Cells[1].Value.ToString());
+                    hostKey.SetValue("host_header_overwrite", row.Cells[2].Value.ToString());
                 }
             }
 
@@ -120,7 +118,59 @@ namespace PortableDnsProxy
 
         private void btnAddHost_Click(object sender, EventArgs e)
         {
-            dgvHosts.Rows.Add();
+            using (ConfigHost frmConfigHost = new ConfigHost())
+            {
+                if (DialogResult.OK == frmConfigHost.ShowDialog(this))
+                {
+                    // If another record with the changed hostname already exists, overwrite that
+                    bool overwritten = false;
+                    foreach (DataGridViewRow row in dgvHosts.Rows)
+                    {
+                        if (row.Cells[0].Value.ToString().Equals(frmConfigHost.tbxHostMatch.Text))
+                        {
+                            row.Cells[1].Value = frmConfigHost.tbxHostRedirect.Text;
+                            row.Cells[2].Value = frmConfigHost.tbxHostHeaderOverwrite.Text;
+                            overwritten = true;
+                            break;
+                        }
+                    }
+
+                    if (!overwritten)
+                    {
+                        dgvHosts.Rows.Add(frmConfigHost.tbxHostMatch.Text, frmConfigHost.tbxHostRedirect.Text, frmConfigHost.tbxHostHeaderOverwrite.Text);
+                    }
+                }
+            }
+        }
+
+        private void dgvHosts_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0 && dgvHosts.Rows[e.RowIndex] != null)
+            {
+                DataGridViewRow editedRow = dgvHosts.Rows[e.RowIndex];
+
+                using (ConfigHost frmConfigHost = new ConfigHost(editedRow.Cells[0].Value.ToString(),
+                                                                 editedRow.Cells[1].Value.ToString(),
+                                                                 editedRow.Cells[2].Value.ToString()))
+                {
+                    if (DialogResult.OK == frmConfigHost.ShowDialog(this))
+                    {
+                        editedRow.Cells[0].Value = frmConfigHost.tbxHostMatch.Text;
+                        editedRow.Cells[1].Value = frmConfigHost.tbxHostRedirect.Text;
+                        editedRow.Cells[2].Value =  frmConfigHost.tbxHostHeaderOverwrite.Text;
+
+                        // If another record with the changed hostname already exists, overwrite that
+                        foreach (DataGridViewRow row in dgvHosts.Rows)
+                        {
+                            if (row.Index != e.RowIndex && row.Cells[0].Value.ToString().Equals(frmConfigHost.tbxHostMatch.Text))
+                            {
+                                dgvHosts.Rows.RemoveAt(row.Index);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         private void btnRemoveHost_Click(object sender, EventArgs e)

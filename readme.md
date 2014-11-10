@@ -3,11 +3,14 @@
 
 When in need for a software which could redirect HTTP requests meant for one server to another server during 
 a infrastucture switch (comparable of using your production domain with your test environment), 
-I downloaded the entire internet but found no solution.
+I downloaded the entire internet but found zero solutions.
 
-The only option which I could think of is an HTTP proxy (which one can set in portable Browsers also within corporate environments) which would to the redirection. 
+[A self portrait.](http://cdn.grumpycats.com/wp-content/uploads/2013/01/Grumpy-Cat-01.jpg)
 
-Et voila. Maybe someone finds this helpful. If not, we can classify it as throw away software. Please take that into account when judging the code ;-)
+The only option which I could think of is an HTTP proxy (which one can set in portable Browsers also within corporate environments) 
+which would to the redirection based on a ruleset. 
+
+Et voila - maybe someone finds this helpful.
 
 PortableDnsProxy supports chunked HTTP requests as well as TLS. For connecting via TLS, self signed intermediate certificates are being created and cached on the fly. 
 So when connecting to an HTTPS server, you will probably need to accept the "unsafe certificate" within your browser on the first visit.
@@ -30,12 +33,14 @@ Here you can specify your (coorporate) proxy server if Portable DNS Proxy needs 
 
 ### Hosts
 
-Please specify one or more hosts which DNS entries you would like to see overridden. 
+Please specify one or more hosts which DNS entries you would like to see tampered with. 
 
-When running, Portable DNS Proxy will send redirect requests to such hostnames to the rewritten hostnames or IPs you specified.
+You can independently from each other define 
 
-If you do not like to use this feature, simply specify "localhost" => "127.0.0.1", as
-PortableDnsProxy needs at least one entry to work and this most probably won't bother you.
+  - a host/IP to which requests will be redirected to instead of the original host based on your systems DNS settings
+  - a new hostname which will replace the original hostname within your HTTP request headers.
+
+If you leave a field blank, that action is not being performed (no redirection and/or no rewriting).
 
 ## Configure Your Browser (no admin rights needed)
 

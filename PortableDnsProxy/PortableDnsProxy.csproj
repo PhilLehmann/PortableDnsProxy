@@ -85,6 +85,12 @@
     <Compile Include="Config.Designer.cs">
       <DependentUpon>Config.cs</DependentUpon>
     </Compile>
+    <Compile Include="ConfigHost.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ConfigHost.Designer.cs">
+      <DependentUpon>ConfigHost.cs</DependentUpon>
+    </Compile>
     <Compile Include="DnsProxyClientHandler.cs" />
     <Compile Include="DynamicMessagebox.cs">
       <SubType>Form</SubType>
@@ -124,6 +130,9 @@
     </Compile>
     <EmbeddedResource Include="Config.resx">
       <DependentUpon>Config.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ConfigHost.resx">
+      <DependentUpon>ConfigHost.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DynamicMessagebox.resx">
       <DependentUpon>DynamicMessagebox.cs</DependentUpon>
@@ -217,6 +226,8 @@
     <None Include="Resources\blackboard_sum.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\accept.png" />
+    <None Include="Resources\cancel.png" />
     <Content Include="wooden_sign512_256px.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
