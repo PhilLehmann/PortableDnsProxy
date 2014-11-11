@@ -54,6 +54,7 @@ Chrome based on it's Chromium foundation offers several [command line switches](
 Condition | Explanation
 ------------- | -------------
 --proxy-server | Uses a specified proxy server, overrides system settings. This switch only affects HTTP and HTTPS requests.
+--ignore-certificate-errors | Ignores certificate-related errors (Do this in a save environment only!).
 
 ### Internet Explorer
 Install one of the above.
