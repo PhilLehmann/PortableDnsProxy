@@ -16,6 +16,7 @@ namespace PortableDnsProxy
         internal Dictionary<string, X509Certificate> Certificates { get; set; }
         internal DateTime LastInternetDownNotification = DateTime.MinValue;
         private TcpListener Listener { get; set; }
+        internal IWebProxy SystemDefaultProxy { get; private set; }
 
         private bool StopAccepting { get; set; }
         internal bool DisplayedProxyServerTlsImpotence { get; set; }
@@ -27,6 +28,11 @@ namespace PortableDnsProxy
             StatusWindow = statusWindow;
             Settings = settings;
             Certificates = Utils.GetCachedCertificates();
+
+            if(settings.ProxyType == Utils.DbProxyType.SystemDefault)
+            {
+                SystemDefaultProxy = WebRequest.GetSystemWebProxy();
+            }
 
             StopAccepting = false;
         }

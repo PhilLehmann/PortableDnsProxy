@@ -45,15 +45,23 @@ If you leave a field blank, that action is not being performed (no redirection a
 ## Configure Your Browser (no admin rights needed)
 
 ### Firefox
-An instruction with screenshots can be found [here](http://www.wikihow.com/Enter-Proxy-Settings-in-Firefox).
+
+An instruction with screenshots for setting up the proxy can be found [here](http://www.wikihow.com/Enter-Proxy-Settings-in-Firefox).
+
+An extension for easily skipping the self signed certificate warnings (Do this in a save environment only!) can be found [here](https://addons.mozilla.org/en-US/firefox/addon/skip-cert-error/).
 
 ### Chrome
 
-Chrome based on it's Chromium foundation offers several [command line switches](http://peter.sh/experiments/chromium-command-line-switches/). One of these switches is:
+Chrome, based on it's Chromium foundation offers several [command line switches](http://peter.sh/experiments/chromium-command-line-switches/). Interesting switches are:
 
 Condition | Explanation
 ------------- | -------------
 --proxy-server | Uses a specified proxy server, overrides system settings. This switch only affects HTTP and HTTPS requests.
+--ignore-certificate-errors | Ignores certificate-related errors (Do this in a save environment only!).
+
+So, you could start Chrome with a shortcut that has the following address:
+
+    "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --proxy-server="http://127.0.0.1:8042" --ignore-certificate-errors
 
 ### Internet Explorer
 Install one of the above.

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Forms;
@@ -36,20 +37,33 @@ namespace PortableDnsProxy
                 Close();
             }
 
-            Proxy = new DnsProxyServer(this, settings);
+            if (settings.ProxyType == Utils.DbProxyType.SystemDefault)
+            {
+                IWebProxy proxy = WebRequest.GetSystemWebProxy();
 
-            Thread serverThread = new Thread(new ThreadStart(Proxy.Start));
-            serverThread.Start();
-
-            if(settings.ProxyType != Starksoft.Net.Proxy.ProxyType.None)
+                if(proxy == null)
+                {
+                    settings.ProxyType = Utils.DbProxyType.None;
+                }
+                else
+                {
+                    lblProxyHostValue.Text = "System default";
+                    lblProxyTypeValue.Text = "n/a";
+                }
+            }
+            else if (settings.ProxyType != Utils.DbProxyType.None)
             {
                 lblProxyHostValue.Text = settings.ProxyHost + ":" + settings.ProxyPort;
                 lblProxyTypeValue.Text = settings.ProxyType.ToString().Replace("Http", "HTTP").Replace("Socks", "SOCKS");
             }
 
+            Proxy = new DnsProxyServer(this, settings);
             totalTlsCertsInStore = Proxy.Certificates.Count;
             lblTlsCertsInStoreValue.Text = String.Format("{0:n0}", totalTlsCertsInStore);
             blockedTlsCerts = new List<string>();
+
+            Thread serverThread = new Thread(new ThreadStart(Proxy.Start));
+            serverThread.Start();
         }
 
         private void btnStopMe_Click(object sender, EventArgs e)

@@ -13,7 +13,7 @@ using System.Windows.Forms;
 
 namespace PortableDnsProxy
 {
-    public class Utils
+    public static class Utils
     {
         #region Settings
 
@@ -31,9 +31,59 @@ namespace PortableDnsProxy
             }
         }
 
+        public enum DbProxyType
+        {
+            None,
+            SystemDefault,
+            Http,
+            Socks4,
+            Socks4a,
+            Socks5
+        }
+
+        public static Starksoft.Net.Proxy.ProxyType ToProxyType(this DbProxyType dbProxyType)
+        {
+            switch (dbProxyType)
+            {
+                case DbProxyType.None:
+                    return Starksoft.Net.Proxy.ProxyType.None;
+                case DbProxyType.Http:
+                    return Starksoft.Net.Proxy.ProxyType.Http;
+                case DbProxyType.Socks4:
+                    return Starksoft.Net.Proxy.ProxyType.Socks4;
+                case DbProxyType.Socks4a:
+                    return Starksoft.Net.Proxy.ProxyType.Socks4a;
+                case DbProxyType.Socks5:
+                    return Starksoft.Net.Proxy.ProxyType.Socks5;
+                default:
+                    return Starksoft.Net.Proxy.ProxyType.None;
+            }
+        }
+
+        public static Starksoft.Net.Proxy.ProxyType ToProxyType(this Uri uri)
+        {
+            switch (uri.Scheme.ToLower())
+            {
+                case "http":
+                    return Starksoft.Net.Proxy.ProxyType.Http;
+                case "https":
+                    return Starksoft.Net.Proxy.ProxyType.Http;
+                case "socks":
+                    return Starksoft.Net.Proxy.ProxyType.Socks4;
+                case "socks4":
+                    return Starksoft.Net.Proxy.ProxyType.Socks4;
+                case "socks4a":
+                    return Starksoft.Net.Proxy.ProxyType.Socks4a;
+                case "socks5":
+                    return Starksoft.Net.Proxy.ProxyType.Socks5;
+            }
+
+            return Starksoft.Net.Proxy.ProxyType.Http;
+        }
+
         public class DbSettings
         {
-            public Starksoft.Net.Proxy.ProxyType ProxyType { get; internal set; }
+            public DbProxyType ProxyType { get; internal set; }
             public string ProxyHost { get; internal set; }
             public int ProxyPort { get; internal set; }
 
@@ -72,29 +122,38 @@ namespace PortableDnsProxy
             object proxyHost = settingKey.GetValue("proxy_host");
             object proxyPort = settingKey.GetValue("proxy_port");
 
-            if (proxyType != null && proxyHost != null && proxyPort != null)
+            if (proxyType != null)
             {
-                string proxyHostString = proxyHost.ToString();
-                string proxyPortString = proxyPort.ToString();
+                string proxyTypeString = proxyType.ToString();
 
-                if(!proxyHost.Equals("") && !proxyPortString.Equals(""))
+                if(proxyTypeString.Equals("System default"))
                 {
-                    int proxyPortInt;
-                    if (!int.TryParse(proxyPortString, out proxyPortInt) || proxyPortInt < 1 || proxyPortInt > 65535)
+                    settings.ProxyType = DbProxyType.SystemDefault;
+                }
+                else if(proxyHost != null && proxyPort != null)
+                {
+                    string proxyHostString = proxyHost.ToString();
+                    string proxyPortString = proxyPort.ToString();
+
+                    if (!proxyHost.Equals("") && !proxyPortString.Equals(""))
                     {
-                        return null;
+                        int proxyPortInt;
+                        if (!int.TryParse(proxyPortString, out proxyPortInt) || proxyPortInt < 1 || proxyPortInt > 65535)
+                        {
+                            return null;
+                        }
+
+                        DbProxyType proxyTypeEnum;
+
+                        if (!Enum.TryParse<DbProxyType>(proxyTypeString, true, out proxyTypeEnum))
+                        {
+                            return null;
+                        }
+
+                        settings.ProxyType = proxyTypeEnum;
+                        settings.ProxyHost = proxyHostString;
+                        settings.ProxyPort = proxyPortInt;
                     }
-
-                    Starksoft.Net.Proxy.ProxyType proxyTypeEnum;
-
-                    if (!Enum.TryParse<Starksoft.Net.Proxy.ProxyType>(proxyType.ToString(), true, out proxyTypeEnum))
-                    {
-                        return null;
-                    }
-
-                    settings.ProxyType = proxyTypeEnum;
-                    settings.ProxyHost = proxyHostString;
-                    settings.ProxyPort = proxyPortInt;
                 }
             }
 
@@ -213,20 +272,6 @@ namespace PortableDnsProxy
             return cachedCertificates;
         }
 
-        public static TcpClient GetSettingsConformantServerTcpClient(DnsProxyServer server, string serverHost, int serverPort)
-        {
-            if(server.Settings.ProxyType == Starksoft.Net.Proxy.ProxyType.None)
-            {
-                return new TcpClient(serverHost, serverPort);
-            }
-            else
-            {
-                return new Starksoft.Net.Proxy.ProxyClientFactory().
-                           CreateProxyClient(server.Settings.ProxyType, server.Settings.ProxyHost, server.Settings.ProxyPort).
-                           CreateConnection(serverHost, serverPort);
-            }
-        }
-
         #endregion
 
         # region Stream Helplings
@@ -302,11 +347,28 @@ namespace PortableDnsProxy
                     {
                         firstLineContainsDomainName = true;
                     }
+
+                    if(response.Verb.Equals("CONNECT"))
+                    {
+                        response.Hostname = firstLineTokens[1].Trim();
+                        hostnameWithPort = response.Hostname;
+
+                        if (response.Hostname.Contains(":"))
+                        {
+                            int colonPosition = response.Hostname.IndexOf(':');
+                            response.Port = int.Parse(response.Hostname.Substring(colonPosition + 1));
+                            response.Hostname = response.Hostname.Substring(0, colonPosition);
+                        }
+                        else
+                        {
+                            response.Port = 80;
+                        }
+                    }
                 }
                 else
                 {
                     string normalizedHttpHeader = httpHeader.ToLower();
-                    if (normalizedHttpHeader.StartsWith("host"))
+                    if (response.Hostname == null && normalizedHttpHeader.StartsWith("host"))
                     {
                         response.Hostname = httpHeader.Substring(httpHeader.IndexOf(':') + 1).Trim();
                         hostnameWithPort = response.Hostname;

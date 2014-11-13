@@ -219,6 +219,7 @@
             this.cbxProxyType.FormattingEnabled = true;
             this.cbxProxyType.Items.AddRange(new object[] {
             "None",
+            "System default",
             "HTTP",
             "SOCKS4",
             "SOCKS4a",

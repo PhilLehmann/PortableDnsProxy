@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
@@ -82,7 +83,7 @@ namespace PortableDnsProxy
                         }
 
                         // Proxy the request to the target host
-                        serverConnection = Utils.GetSettingsConformantServerTcpClient(Server, httpRequestHeaders.Hostname, httpRequestHeaders.Port);
+                        serverConnection = GetSettingsConformantServerTcpClient(Server, httpRequestHeaders.Hostname, httpRequestHeaders.Port);
                         serverStream = serverConnection.GetStream();
 
                         lastHttpRequestHeaders = httpRequestHeaders;
@@ -241,7 +242,7 @@ namespace PortableDnsProxy
             
                 // Say hello to client; make sure the socket is in blocking mode else this will fail with WOULDBLOCK
                 clientTlsStream = new SslStream(clientStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate));
-                clientTlsStream.ReadTimeout = 15000;
+                clientTlsStream.ReadTimeout = 5000;
 
                 // Remote certificate is not working
                 // X509Certificate certificate = serverTlsStream.RemoteCertificate;
@@ -308,6 +309,36 @@ namespace PortableDnsProxy
                 {
                     clientTlsStream.Close();
                 }
+            }
+        }
+
+        public static TcpClient GetSettingsConformantServerTcpClient(DnsProxyServer server, string serverHost, int serverPort)
+        {
+            if (server.Settings.ProxyType == Utils.DbProxyType.None)
+            {
+                return new TcpClient(serverHost, serverPort);
+            }
+            else if (server.Settings.ProxyType == Utils.DbProxyType.SystemDefault)
+            {
+                Uri serverHostUri = new Uri(serverHost + ":" + serverPort);
+                if(server.SystemDefaultProxy.IsBypassed(serverHostUri))
+                {
+                    return new TcpClient(serverHost, serverPort);
+                }
+                else
+                {
+                    Uri proxyUri = server.SystemDefaultProxy.GetProxy(serverHostUri);
+
+                    return new Starksoft.Net.Proxy.ProxyClientFactory().
+                               CreateProxyClient(proxyUri.ToProxyType(), proxyUri.Host, proxyUri.Port).
+                               CreateConnection(serverHost, serverPort);
+                }
+            }
+            else
+            {
+                return new Starksoft.Net.Proxy.ProxyClientFactory().
+                           CreateProxyClient(server.Settings.ProxyType.ToProxyType(), server.Settings.ProxyHost, server.Settings.ProxyPort).
+                           CreateConnection(serverHost, serverPort);
             }
         }
 

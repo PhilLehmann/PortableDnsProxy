@@ -39,7 +39,12 @@ namespace PortableDnsProxy
 
             if(settings != null)
             {
-                if (settings.ProxyType != Starksoft.Net.Proxy.ProxyType.None)
+                if (settings.ProxyType == Utils.DbProxyType.SystemDefault)
+                {
+                    cbxProxyType.SelectedItem = "System default";
+                    tbxProxyHost.Text = "";
+                }
+                else if (settings.ProxyType != Utils.DbProxyType.None)
                 {
                     cbxProxyType.SelectedItem = settings.ProxyType.ToString().Replace("Http", "HTTP").Replace("Socks", "SOCKS");
                     tbxProxyHost.Text = settings.ProxyHost + ":" + settings.ProxyPort.ToString();
@@ -62,29 +67,35 @@ namespace PortableDnsProxy
             RegistryKey settingKey = Registry.CurrentUser.CreateSubKey("SOFTWARE\\PhilsIndustries\\PortableDnsProxy");
 
             if(cbxProxyType.SelectedItem != null &&
-               !cbxProxyType.SelectedItem.Equals("None") && 
-               !tbxProxyHost.Text.Trim().Equals(""))
+               !cbxProxyType.SelectedItem.Equals("None"))
             {
-                string proxyHost;
-                int proxyPort = 8080;
-
-                if(tbxProxyHost.Text.Contains(":"))
+                if(cbxProxyType.SelectedItem.Equals("System default"))
                 {
-                    proxyHost = tbxProxyHost.Text.Substring(0, tbxProxyHost.Text.LastIndexOf(":"));
-                    if (!int.TryParse(tbxProxyHost.Text.Substring(tbxProxyHost.Text.LastIndexOf(":") + 1), out proxyPort) || proxyPort < 1 || proxyPort > 65535)
+                    settingKey.SetValue("proxy_type", "System default");
+                }
+                else if(!tbxProxyHost.Text.Trim().Equals(""))
+                {
+                    string proxyHost;
+                    int proxyPort = 8080;
+
+                    if (tbxProxyHost.Text.Contains(":"))
                     {
-                        Utils.ShowError("Please enter a valid port number [1 - 65535] for your HTTP proxy into the HTTP proxy textbox.");
-                        return false;
+                        proxyHost = tbxProxyHost.Text.Substring(0, tbxProxyHost.Text.LastIndexOf(":"));
+                        if (!int.TryParse(tbxProxyHost.Text.Substring(tbxProxyHost.Text.LastIndexOf(":") + 1), out proxyPort) || proxyPort < 1 || proxyPort > 65535)
+                        {
+                            Utils.ShowError("Please enter a valid port number [1 - 65535] for your HTTP proxy into the HTTP proxy textbox.");
+                            return false;
+                        }
                     }
-                }
-                else
-                {
-                    proxyHost = tbxProxyHost.Text;
-                }
+                    else
+                    {
+                        proxyHost = tbxProxyHost.Text;
+                    }
 
-                settingKey.SetValue("proxy_type", cbxProxyType.SelectedItem);
-                settingKey.SetValue("proxy_host", proxyHost);
-                settingKey.SetValue("proxy_port", proxyPort);
+                    settingKey.SetValue("proxy_type", cbxProxyType.SelectedItem);
+                    settingKey.SetValue("proxy_host", proxyHost);
+                    settingKey.SetValue("proxy_port", proxyPort);
+                }
             }
 
             int port;
@@ -213,7 +224,7 @@ namespace PortableDnsProxy
 
         private void cbxProxyType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (cbxProxyType.SelectedItem == null || cbxProxyType.SelectedItem.Equals("None"))
+            if (cbxProxyType.SelectedItem == null || cbxProxyType.SelectedItem.Equals("None") || cbxProxyType.SelectedItem.Equals("System default"))
             {
                 tbxProxyHost.Enabled = false;
                 tbxProxyHost.Text = "";
