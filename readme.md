@@ -5,7 +5,7 @@ When in need for a software which could redirect HTTP requests meant for one ser
 a infrastucture switch (comparable of using your production domain with your test environment), 
 I downloaded the entire internet but found zero solutions.
 
-[A self portrait.](http://cdn.grumpycats.com/wp-content/uploads/2013/01/Grumpy-Cat-01.jpg)
+![A self portrait.](http://cdn.grumpycats.com/wp-content/uploads/2013/01/Grumpy-Cat-01.jpg)
 
 The only option which I could think of is an HTTP proxy (which one can set in portable Browsers also within corporate environments) 
 which would to the redirection based on a ruleset. 
