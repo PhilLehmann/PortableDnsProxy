@@ -237,11 +237,12 @@ namespace Starksoft.Net.Proxy
 
         private void SendConnectionCommand(string host, int port)
         {
+            /*
             if(port == 80)
             {
                 // Maximize compatibility with proxies as many do not understand CONNECT method
                 return;
-            }
+            }*/
 
             NetworkStream stream = _tcpClient.GetStream(); 
 
