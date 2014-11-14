@@ -242,7 +242,7 @@ namespace PortableDnsProxy
             
                 // Say hello to client; make sure the socket is in blocking mode else this will fail with WOULDBLOCK
                 clientTlsStream = new SslStream(clientStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate));
-                clientTlsStream.ReadTimeout = 5000;
+                clientTlsStream.ReadTimeout = 15000;
 
                 // Remote certificate is not working
                 // X509Certificate certificate = serverTlsStream.RemoteCertificate;
@@ -288,6 +288,8 @@ namespace PortableDnsProxy
                     Server.StatusWindow.SetTlsCertBlocked(newHttpRequestHeaders.Hostname, false);
 
                     RequestId = Server.StatusWindow.AddReceivedRequestToStatistic();
+
+                    clientTlsStream.ReadTimeout = 5000;
 
                     HandleRequest(newHttpRequestHeaders, statsRedirected, clientTlsStream, serverTlsStream);
                 }
